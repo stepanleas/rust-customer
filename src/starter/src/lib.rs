@@ -5,7 +5,9 @@ use actix_web::{App, HttpServer};
 use anyhow::Result;
 use application::Settings;
 use infrastructure::PostgresCustomerRepository;
+use kafka::client::KafkaClient;
 use log::{debug, info};
+use messaging::{CustomerCreatedEventKafkaPublisher, KafkaProducer};
 use presentation::AppState;
 use std::sync::Arc;
 use utoipa_actix_web::AppExt;
@@ -17,14 +19,19 @@ pub async fn run() -> Result<Server> {
 }
 
 async fn run_internal(settings: &Settings) -> Result<Server> {
-    info!("Starting HTTP server at {}", &settings.http_url);
-    debug!("with configuration: {:?}", &settings);
+    info!("Starting HTTP server at {}", settings.http_url);
+    debug!("with configuration: {:?}", settings);
 
     let pool = infrastructure::configure(settings).await?;
+    let mut kafka_client = KafkaClient::new(vec![settings.kafka_host.to_owned()]);
+    kafka_client.load_metadata_all()?;
 
     let app_state = AppState {
         settings: settings.clone(),
         customer_repository: Arc::new(PostgresCustomerRepository::new(&pool)),
+        customer_message_publisher: Arc::new(CustomerCreatedEventKafkaPublisher::new(
+            KafkaProducer::new(kafka_client)?,
+        )),
     };
 
     let server = HttpServer::new(move || {

@@ -33,7 +33,10 @@ pub async fn create(
         .app_data::<web::Data<AppState>>()
         .ok_or_else(|| ApiError::internal(anyhow!("Missing app state")))?;
 
-    let handler = CreateCustomerCommandHandler::new(state.customer_repository.clone());
+    let handler = CreateCustomerCommandHandler::new(
+        state.customer_repository.clone(),
+        state.customer_message_publisher.clone(),
+    );
 
     let command = CreateCustomerCommand::new(
         payload.user_name.clone(),
