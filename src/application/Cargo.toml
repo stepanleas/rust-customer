@@ -9,5 +9,6 @@ uuid.workspace = true
 anyhow.workspace = true
 config.workspace = true
 shared.workspace = true
+log.workspace = true
 
 domain = { path = "../domain" }
