@@ -37,7 +37,7 @@ impl CustomerMessagePublisher for CustomerCreatedEventKafkaPublisher {
             Ok(_) => {
                 info!(
                     "CustomerCreatedEvent published successfully for customer with id: {}",
-                    customer_id.
+                    customer_id,
                 );
 
                 Ok(())
