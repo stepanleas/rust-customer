@@ -1,4 +1,4 @@
 mod kafka;
 
 pub use kafka::producer::KafkaProducer;
-pub use kafka::publishers::CustomerCreatedEventKafkaPublisher;
+pub use kafka::publishers::CustomerKafkaPublisher;

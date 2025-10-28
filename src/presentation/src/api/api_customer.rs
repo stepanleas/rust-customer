@@ -15,8 +15,8 @@ use uuid::Uuid;
 const CUSTOMERS: &str = "Customers";
 
 #[utoipa::path(
-    context_path = "/api/customers",
     tag = CUSTOMERS,
+    operation_id = "create_customer",
     responses(
         (status = 201, description = "Create a customer", body = [CustomerResponse])
     ),
@@ -50,8 +50,8 @@ pub async fn create(
 }
 
 #[utoipa::path(
-    context_path = "/api/customers",
     tag = CUSTOMERS,
+    operation_id = "update_customer",
     responses(
         (status = 200, description = "Update a customer by id", body = [CustomerResponse])
     ),
@@ -72,7 +72,10 @@ pub async fn update(
         .app_data::<web::Data<AppState>>()
         .ok_or_else(|| ApiError::internal(anyhow!("Missing app state")))?;
 
-    let handler = UpdateCustomerCommandHandler::new(state.customer_repository.clone());
+    let handler = UpdateCustomerCommandHandler::new(
+        state.customer_repository.clone(),
+        state.customer_message_publisher.clone(),
+    );
 
     let command = UpdateCustomerCommand::new(
         id.into_inner(),
@@ -83,5 +86,5 @@ pub async fn update(
 
     let customer = handler.execute(command).await?;
 
-    Ok(HttpResponse::Created().json(json!({ "data": CustomerResponse::from(customer) })))
+    Ok(HttpResponse::Ok().json(json!({ "data": CustomerResponse::from(customer) })))
 }

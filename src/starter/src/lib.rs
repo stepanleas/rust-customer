@@ -7,7 +7,7 @@ use application::Settings;
 use infrastructure::PostgresCustomerRepository;
 use kafka::client::KafkaClient;
 use log::{debug, info};
-use messaging::{CustomerCreatedEventKafkaPublisher, KafkaProducer};
+use messaging::{CustomerKafkaPublisher, KafkaProducer};
 use presentation::AppState;
 use std::sync::Arc;
 use utoipa_actix_web::AppExt;
@@ -29,9 +29,9 @@ async fn run_internal(settings: &Settings) -> Result<Server> {
     let app_state = AppState {
         settings: settings.clone(),
         customer_repository: Arc::new(PostgresCustomerRepository::new(&pool)),
-        customer_message_publisher: Arc::new(CustomerCreatedEventKafkaPublisher::new(
-            KafkaProducer::new(kafka_client)?,
-        )),
+        customer_message_publisher: Arc::new(CustomerKafkaPublisher::new(KafkaProducer::new(
+            kafka_client,
+        )?)),
     };
 
     let server = HttpServer::new(move || {

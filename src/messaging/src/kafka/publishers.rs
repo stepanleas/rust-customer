@@ -1,39 +1,51 @@
-use crate::kafka::avro::CustomerCreatedEventAvroModel;
+use crate::kafka::avro::{
+    AvroSerializable, CustomerCreatedEventAvroModel, CustomerUpdatedEventAvroModel,
+};
 use crate::kafka::producer::KafkaProducer;
 use anyhow::anyhow;
 use application::CustomerMessagePublisher;
-use domain::CustomerCreatedEvent;
+use domain::{CustomerCreatedEvent, CustomerUpdatedEvent};
 use log::{error, info};
 use std::sync::Mutex;
 
-pub struct CustomerCreatedEventKafkaPublisher {
+pub struct CustomerKafkaPublisher {
     producer: Mutex<KafkaProducer>,
 }
 
-impl CustomerCreatedEventKafkaPublisher {
+impl CustomerKafkaPublisher {
     pub fn new(producer: KafkaProducer) -> Self {
         Self {
             producer: Mutex::new(producer),
         }
     }
+
+    fn publish_event<T, E>(&self, topic: &str, event: T) -> anyhow::Result<()>
+    where
+        T: Into<E>,
+        E: AvroSerializable,
+    {
+        let mut producer = self
+            .producer
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+
+        let avro_model: E = event.into();
+        producer.send(topic, &avro_model.to_avro_bytes()?)
+    }
 }
 
-impl CustomerMessagePublisher for CustomerCreatedEventKafkaPublisher {
-    fn publish(&self, event: CustomerCreatedEvent) -> anyhow::Result<()> {
+impl CustomerMessagePublisher for CustomerKafkaPublisher {
+    fn publish_created(&self, event: CustomerCreatedEvent) -> anyhow::Result<()> {
         let customer_id = &event.customer().id().as_uuid().to_string();
         info!(
             "Received CustomerCreatedEvent for customer with id: {}",
             customer_id,
         );
 
-        let mut producer = self
-            .producer
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-
-        let avro_model: CustomerCreatedEventAvroModel = event.into();
-
-        match producer.send("customer.created", &avro_model.to_avro_bytes()?) {
+        match self.publish_event::<CustomerCreatedEvent, CustomerCreatedEventAvroModel>(
+            "customer-created",
+            event,
+        ) {
             Ok(_) => {
                 info!(
                     "CustomerCreatedEvent published successfully for customer with id: {}",
@@ -45,6 +57,37 @@ impl CustomerMessagePublisher for CustomerCreatedEventKafkaPublisher {
             Err(error) => {
                 error!(
                     "Error while sending CustomerCreatedEvent to kafka for customer id: {}. {}",
+                    customer_id,
+                    error.to_string(),
+                );
+
+                Err(anyhow!(error))
+            }
+        }
+    }
+
+    fn publish_updated(&self, event: CustomerUpdatedEvent) -> anyhow::Result<()> {
+        let customer_id = &event.customer().id().as_uuid().to_string();
+        info!(
+            "Received CustomerUpdatedEvent for customer with id: {}",
+            customer_id,
+        );
+
+        match self.publish_event::<CustomerUpdatedEvent, CustomerUpdatedEventAvroModel>(
+            "customer-updated",
+            event,
+        ) {
+            Ok(_) => {
+                info!(
+                    "CustomerUpdatedEvent published successfully for customer with id: {}",
+                    customer_id,
+                );
+
+                Ok(())
+            }
+            Err(error) => {
+                error!(
+                    "Error while sending CustomerUpdatedEvent to kafka for customer id: {}. {}",
                     customer_id,
                     error.to_string(),
                 );

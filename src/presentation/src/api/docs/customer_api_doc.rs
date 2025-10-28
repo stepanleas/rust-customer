@@ -1,4 +1,5 @@
 use crate::api::api_customer::__path_create;
+use crate::api::api_customer::__path_update;
 
 use utoipa::OpenApi;
 
@@ -9,6 +10,7 @@ use utoipa::OpenApi;
     ),
     paths(
         create,
+        update,
     )
 )]
 pub(crate) struct CustomerApiDoc;

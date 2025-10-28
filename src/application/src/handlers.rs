@@ -3,23 +3,23 @@ use crate::commands::{CreateCustomerCommand, UpdateCustomerCommand};
 use crate::dtos::CustomerDto;
 use crate::mappers::CustomerMapper;
 use crate::repositories::CustomerRepository;
-use domain::CustomerCreatedEvent;
+use domain::{CustomerCreatedEvent, CustomerUpdatedEvent};
 use log::info;
 use std::sync::Arc;
 
 pub struct CreateCustomerCommandHandler {
     repository: Arc<dyn CustomerRepository>,
-    publisher: Arc<dyn CustomerMessagePublisher>,
+    message_publisher: Arc<dyn CustomerMessagePublisher>,
 }
 
 impl CreateCustomerCommandHandler {
     pub fn new(
         repository: Arc<dyn CustomerRepository>,
-        publisher: Arc<dyn CustomerMessagePublisher>,
+        message_publisher: Arc<dyn CustomerMessagePublisher>,
     ) -> Self {
         Self {
             repository,
-            publisher,
+            message_publisher,
         }
     }
 
@@ -32,8 +32,8 @@ impl CreateCustomerCommandHandler {
             customer.id().as_uuid().to_string()
         );
 
-        self.publisher
-            .publish(CustomerCreatedEvent::new(customer.clone()))?;
+        self.message_publisher
+            .publish_created(CustomerCreatedEvent::new(customer.clone()))?;
 
         Ok(CustomerDto::from(customer))
     }
@@ -41,17 +41,31 @@ impl CreateCustomerCommandHandler {
 
 pub struct UpdateCustomerCommandHandler {
     repository: Arc<dyn CustomerRepository>,
+    message_publisher: Arc<dyn CustomerMessagePublisher>,
 }
 
 impl UpdateCustomerCommandHandler {
-    pub fn new(repository: Arc<dyn CustomerRepository>) -> Self {
-        Self { repository }
+    pub fn new(
+        repository: Arc<dyn CustomerRepository>,
+        message_publisher: Arc<dyn CustomerMessagePublisher>,
+    ) -> Self {
+        Self {
+            repository,
+            message_publisher,
+        }
     }
 
     pub async fn execute(&self, command: UpdateCustomerCommand) -> anyhow::Result<CustomerDto> {
         let customer = self
             .repository
             .save(CustomerMapper::map_update_customer_command_to_domain_entity(command))?;
+        info!(
+            "Customer with id: {} updated",
+            customer.id().as_uuid().to_string()
+        );
+
+        self.message_publisher
+            .publish_updated(CustomerUpdatedEvent::new(customer.clone()))?;
 
         Ok(CustomerDto::from(customer))
     }
