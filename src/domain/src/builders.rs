@@ -1,4 +1,4 @@
-use crate::Customer;
+use crate::entities::Customer;
 use shared::domain::value_objects::CustomerId;
 
 #[derive(Default)]

@@ -1,7 +1,9 @@
 use crate::entities::Customer;
 use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
 pub struct CustomerCreatedEvent {
+    id: Uuid,
     customer: Customer,
     created_at: DateTime<Utc>,
 }
@@ -9,9 +11,14 @@ pub struct CustomerCreatedEvent {
 impl CustomerCreatedEvent {
     pub fn new(customer: Customer) -> Self {
         Self {
+            id: Uuid::new_v4(),
             customer,
             created_at: Utc::now(),
         }
+    }
+
+    pub fn id(&self) -> Uuid {
+        self.id
     }
 
     pub fn customer(&self) -> &Customer {
@@ -24,6 +31,7 @@ impl CustomerCreatedEvent {
 }
 
 pub struct CustomerUpdatedEvent {
+    id: Uuid,
     customer: Customer,
     created_at: DateTime<Utc>,
 }
@@ -31,9 +39,14 @@ pub struct CustomerUpdatedEvent {
 impl CustomerUpdatedEvent {
     pub fn new(customer: Customer) -> Self {
         Self {
+            id: Uuid::new_v4(),
             customer,
             created_at: Utc::now(),
         }
+    }
+
+    pub fn id(&self) -> Uuid {
+        self.id
     }
 
     pub fn customer(&self) -> &Customer {

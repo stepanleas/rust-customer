@@ -3,7 +3,7 @@ use utoipa::ToSchema;
 use validator::Validate;
 
 #[readonly::make]
-#[derive(Deserialize, Validate, ToSchema)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct CreateCustomerRequest {
     #[validate(length(
         min = 1,
@@ -28,7 +28,7 @@ pub struct CreateCustomerRequest {
 }
 
 #[readonly::make]
-#[derive(Deserialize, Validate, ToSchema)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct UpdateCustomerRequest {
     #[validate(length(
         min = 1,

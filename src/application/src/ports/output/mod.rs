@@ -1,3 +1,1 @@
-mod publishers;
-
-pub use publishers::CustomerMessagePublisher;
+pub mod publishers;

@@ -1,5 +1,5 @@
 use crate::commands::{CreateCustomerCommand, UpdateCustomerCommand};
-use domain::Customer;
+use domain::entities::Customer;
 use shared::domain::value_objects::CustomerId;
 
 pub struct CustomerMapper;

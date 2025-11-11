@@ -1,11 +1,10 @@
-use crate::kafka::avro::{
+use crate::kafka::avro::models::{
     AvroSerializable, CustomerCreatedEventAvroModel, CustomerUpdatedEventAvroModel,
 };
 use crate::kafka::producer::KafkaProducer;
 use anyhow::anyhow;
-use application::CustomerMessagePublisher;
-use domain::{CustomerCreatedEvent, CustomerUpdatedEvent};
-use log::{error, info};
+use application::ports::output::publishers::CustomerMessagePublisher;
+use domain::events::{CustomerCreatedEvent, CustomerUpdatedEvent};
 use std::sync::Mutex;
 
 pub struct CustomerKafkaPublisher {
@@ -37,7 +36,7 @@ impl CustomerKafkaPublisher {
 impl CustomerMessagePublisher for CustomerKafkaPublisher {
     fn publish_created(&self, event: CustomerCreatedEvent) -> anyhow::Result<()> {
         let customer_id = &event.customer().id().as_uuid().to_string();
-        info!(
+        tracing::info!(
             "Received CustomerCreatedEvent for customer with id: {}",
             customer_id,
         );
@@ -47,7 +46,7 @@ impl CustomerMessagePublisher for CustomerKafkaPublisher {
             event,
         ) {
             Ok(_) => {
-                info!(
+                tracing::info!(
                     "CustomerCreatedEvent published successfully for customer with id: {}",
                     customer_id,
                 );
@@ -55,7 +54,7 @@ impl CustomerMessagePublisher for CustomerKafkaPublisher {
                 Ok(())
             }
             Err(error) => {
-                error!(
+                tracing::error!(
                     "Error while sending CustomerCreatedEvent to kafka for customer id: {}. {}",
                     customer_id,
                     error.to_string(),
@@ -68,7 +67,7 @@ impl CustomerMessagePublisher for CustomerKafkaPublisher {
 
     fn publish_updated(&self, event: CustomerUpdatedEvent) -> anyhow::Result<()> {
         let customer_id = &event.customer().id().as_uuid().to_string();
-        info!(
+        tracing::info!(
             "Received CustomerUpdatedEvent for customer with id: {}",
             customer_id,
         );
@@ -78,7 +77,7 @@ impl CustomerMessagePublisher for CustomerKafkaPublisher {
             event,
         ) {
             Ok(_) => {
-                info!(
+                tracing::info!(
                     "CustomerUpdatedEvent published successfully for customer with id: {}",
                     customer_id,
                 );
@@ -86,7 +85,7 @@ impl CustomerMessagePublisher for CustomerKafkaPublisher {
                 Ok(())
             }
             Err(error) => {
-                error!(
+                tracing::error!(
                     "Error while sending CustomerUpdatedEvent to kafka for customer id: {}. {}",
                     customer_id,
                     error.to_string(),

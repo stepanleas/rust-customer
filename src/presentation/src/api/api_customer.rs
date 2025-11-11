@@ -1,19 +1,19 @@
+use crate::app_state::AppState;
 use crate::error::ApiError;
 use crate::requests::{CreateCustomerRequest, UpdateCustomerRequest};
+use crate::responses::CustomerResponse;
 use crate::validation::ValidatedJson;
-use crate::{AppState, CustomerResponse};
 use actix_web::web::Path;
-use actix_web::{HttpRequest, HttpResponse, Responder, post, put, web};
+use actix_web::{HttpMessage, HttpRequest, HttpResponse, Responder, post, put, web};
 use anyhow::anyhow;
-use application::{
-    CreateCustomerCommand, CreateCustomerCommandHandler, UpdateCustomerCommand,
-    UpdateCustomerCommandHandler,
-};
+use application::commands::{CreateCustomerCommand, UpdateCustomerCommand};
+use application::handlers::{CreateCustomerCommandHandler, UpdateCustomerCommandHandler};
 use serde_json::json;
 use uuid::Uuid;
 
 const CUSTOMERS: &str = "Customers";
 
+#[tracing::instrument(skip(req))]
 #[utoipa::path(
     tag = CUSTOMERS,
     operation_id = "create_customer",
@@ -27,6 +27,14 @@ pub async fn create(
     req: HttpRequest,
     request: ValidatedJson<CreateCustomerRequest>,
 ) -> Result<impl Responder, ApiError> {
+    let correlation_id = req
+        .extensions()
+        .get::<String>()
+        .cloned()
+        .unwrap_or_else(|| "unknown".to_string());
+
+    tracing::info!(%correlation_id, "Handling customer create");
+
     let payload = request.into_inner();
 
     let state = req
@@ -49,6 +57,7 @@ pub async fn create(
     Ok(HttpResponse::Created().json(json!({ "data": CustomerResponse::from(customer) })))
 }
 
+#[tracing::instrument(skip(req))]
 #[utoipa::path(
     tag = CUSTOMERS,
     operation_id = "update_customer",
@@ -66,6 +75,14 @@ pub async fn update(
     id: Path<Uuid>,
     request: ValidatedJson<UpdateCustomerRequest>,
 ) -> Result<impl Responder, ApiError> {
+    let correlation_id = req
+        .extensions()
+        .get::<String>()
+        .cloned()
+        .unwrap_or_else(|| "unknown".to_string());
+
+    tracing::info!(%correlation_id, "Handling customer update");
+
     let payload = request.into_inner();
 
     let state = req

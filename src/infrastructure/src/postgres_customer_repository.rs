@@ -2,11 +2,9 @@ use crate::DbPool;
 use crate::entities::CustomerEntity;
 use crate::schema::customers::dsl::customers;
 use crate::schema::customers::id;
-use application::CustomerRepository;
-use diesel::ExpressionMethods;
-use diesel::{OptionalExtension, QueryDsl, RunQueryDsl};
-use domain::{Customer, DomainError};
-use uuid::Uuid;
+use application::repositories::CustomerRepository;
+use diesel::RunQueryDsl;
+use domain::entities::Customer;
 
 pub struct PostgresCustomerRepository {
     pool: DbPool,
@@ -19,18 +17,6 @@ impl PostgresCustomerRepository {
 }
 
 impl CustomerRepository for PostgresCustomerRepository {
-    fn find_by_id(&self, entity_id: Uuid) -> anyhow::Result<Customer> {
-        let mut connection = self.pool.get()?;
-
-        let ticket_entity = customers
-            .filter(id.eq(entity_id))
-            .first::<CustomerEntity>(&mut connection)
-            .optional()?
-            .ok_or(DomainError::NotFound { id: entity_id })?;
-
-        Ok(ticket_entity.into())
-    }
-
     fn save(&self, entity: Customer) -> anyhow::Result<Customer> {
         let mut connection = self.pool.get()?;
 

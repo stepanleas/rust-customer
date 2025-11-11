@@ -1,4 +1,4 @@
-use domain::Customer;
+use domain::entities::Customer;
 use uuid::Uuid;
 
 pub struct CustomerDto {

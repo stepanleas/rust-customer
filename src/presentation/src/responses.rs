@@ -1,5 +1,6 @@
 use crate::validation::ValidationFieldError;
-use application::{CustomerDto, Settings};
+use application::dtos::CustomerDto;
+use application::settings::Settings;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -20,7 +21,7 @@ pub struct AppInfoResponse {
     environment: String,
 }
 
-impl crate::responses::AppInfoResponse {
+impl AppInfoResponse {
     pub fn new(settings: Settings) -> Self {
         Self {
             environment: settings.environment,
@@ -29,7 +30,7 @@ impl crate::responses::AppInfoResponse {
 }
 
 #[readonly::make]
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Default, Serialize, Deserialize, ToSchema)]
 pub struct HealthCheckResponse {
     pub status: String,
 }

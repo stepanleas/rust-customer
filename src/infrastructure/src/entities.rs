@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
-use domain::Customer;
+use domain::entities::Customer;
 use shared::domain::value_objects::CustomerId;
 use uuid::Uuid;
 
@@ -29,13 +29,13 @@ impl From<Customer> for CustomerEntity {
     }
 }
 
-impl Into<Customer> for CustomerEntity {
-    fn into(self) -> Customer {
+impl From<CustomerEntity> for Customer {
+    fn from(entity: CustomerEntity) -> Self {
         Customer::builder()
-            .id(CustomerId::from_uuid(self.id))
-            .user_name(self.user_name)
-            .first_name(self.first_name)
-            .last_name(self.last_name)
+            .id(CustomerId::from_uuid(entity.id))
+            .user_name(entity.user_name)
+            .first_name(entity.first_name)
+            .last_name(entity.last_name)
             .build()
     }
 }

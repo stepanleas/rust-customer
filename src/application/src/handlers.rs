@@ -1,10 +1,9 @@
-use crate::CustomerMessagePublisher;
 use crate::commands::{CreateCustomerCommand, UpdateCustomerCommand};
 use crate::dtos::CustomerDto;
 use crate::mappers::CustomerMapper;
+use crate::ports::output::publishers::CustomerMessagePublisher;
 use crate::repositories::CustomerRepository;
-use domain::{CustomerCreatedEvent, CustomerUpdatedEvent};
-use log::info;
+use domain::events::{CustomerCreatedEvent, CustomerUpdatedEvent};
 use std::sync::Arc;
 
 pub struct CreateCustomerCommandHandler {
@@ -27,7 +26,7 @@ impl CreateCustomerCommandHandler {
         let customer = self
             .repository
             .save(CustomerMapper::map_create_customer_command_to_domain_entity(command))?;
-        info!(
+        tracing::info!(
             "Customer with id: {} created",
             customer.id().as_uuid().to_string()
         );
@@ -59,7 +58,7 @@ impl UpdateCustomerCommandHandler {
         let customer = self
             .repository
             .save(CustomerMapper::map_update_customer_command_to_domain_entity(command))?;
-        info!(
+        tracing::info!(
             "Customer with id: {} updated",
             customer.id().as_uuid().to_string()
         );

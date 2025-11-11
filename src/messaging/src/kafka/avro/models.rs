@@ -1,5 +1,5 @@
 use apache_avro::Schema;
-use domain::{CustomerCreatedEvent, CustomerUpdatedEvent};
+use domain::events::{CustomerCreatedEvent, CustomerUpdatedEvent};
 use serde::Serialize;
 
 pub trait AvroSerializable {
@@ -16,6 +16,7 @@ struct CustomerAvroModel {
 
 #[derive(Serialize)]
 pub struct CustomerCreatedEventAvroModel {
+    id: String,
     customer: CustomerAvroModel,
     created_at: String,
 }
@@ -32,6 +33,7 @@ impl AvroSerializable for CustomerCreatedEventAvroModel {
 impl From<CustomerCreatedEvent> for CustomerCreatedEventAvroModel {
     fn from(event: CustomerCreatedEvent) -> Self {
         Self {
+            id: event.id().into(),
             customer: CustomerAvroModel {
                 id: event.customer().id().as_uuid().to_string(),
                 user_name: event.customer().user_name().into(),
@@ -45,6 +47,7 @@ impl From<CustomerCreatedEvent> for CustomerCreatedEventAvroModel {
 
 #[derive(Serialize)]
 pub struct CustomerUpdatedEventAvroModel {
+    id: String,
     customer: CustomerAvroModel,
     created_at: String,
 }
@@ -61,6 +64,7 @@ impl AvroSerializable for CustomerUpdatedEventAvroModel {
 impl From<CustomerUpdatedEvent> for CustomerUpdatedEventAvroModel {
     fn from(event: CustomerUpdatedEvent) -> Self {
         Self {
+            id: event.id().into(),
             customer: CustomerAvroModel {
                 id: event.customer().id().as_uuid().to_string(),
                 user_name: event.customer().user_name().into(),

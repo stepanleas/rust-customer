@@ -1,4 +1,6 @@
-use application::{CustomerMessagePublisher, CustomerRepository, Settings};
+use application::ports::output::publishers::CustomerMessagePublisher;
+use application::repositories::CustomerRepository;
+use application::settings::Settings;
 use std::sync::Arc;
 
 #[derive(Clone)]

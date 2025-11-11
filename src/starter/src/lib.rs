@@ -3,13 +3,15 @@ use actix_web::middleware::Logger;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use anyhow::Result;
-use application::Settings;
-use infrastructure::PostgresCustomerRepository;
+use application::settings::Settings;
+use infrastructure::postgres_customer_repository::PostgresCustomerRepository;
 use kafka::client::KafkaClient;
-use log::{debug, info};
-use messaging::{CustomerKafkaPublisher, KafkaProducer};
-use presentation::AppState;
+use messaging::kafka::producer::KafkaProducer;
+use messaging::kafka::publishers::CustomerKafkaPublisher;
+use presentation::app_state::AppState;
+use presentation::middleware::correlation_id::CorrelationIdMiddleware;
 use std::sync::Arc;
+use tracing_actix_web::TracingLogger;
 use utoipa_actix_web::AppExt;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -19,10 +21,10 @@ pub async fn run() -> Result<Server> {
 }
 
 async fn run_internal(settings: &Settings) -> Result<Server> {
-    info!("Starting HTTP server at {}", settings.http_url);
-    debug!("with configuration: {:?}", settings);
+    tracing::info!("Starting HTTP server at {}", settings.http_url);
+    tracing::debug!("with configuration: {:?}", settings);
 
-    let pool = infrastructure::configure(settings).await?;
+    let pool = infrastructure::config::configure(settings.database_url.clone()).await?;
     let mut kafka_client = KafkaClient::new(vec![settings.kafka_host.to_owned()]);
     kafka_client.load_metadata_all()?;
 
@@ -36,10 +38,12 @@ async fn run_internal(settings: &Settings) -> Result<Server> {
 
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(TracingLogger::default())
+            .wrap(CorrelationIdMiddleware)
             .into_utoipa_app()
-            .openapi(presentation::open_api_docs())
+            .openapi(presentation::api::docs::open_api_docs())
             .map(|app| app.wrap(Logger::default()))
-            .map(|app| app.configure(presentation::configure))
+            .map(|app| app.configure(presentation::config::configure))
             .openapi_service(|api| {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", api)
             })
