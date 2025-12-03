@@ -15,7 +15,7 @@ mod tests {
 
         mock_repository
             .expect_save()
-            .times(1)
+            .once()
             .withf(move |customer| {
                 customer.first_name() == "John"
                     && customer.last_name() == "Doe"
@@ -25,7 +25,7 @@ mod tests {
 
         mock_message_publisher
             .expect_publish_created()
-            .times(1)
+            .once()
             .withf(move |event| {
                 event.customer().first_name() == "John"
                     && event.customer().last_name() == "Doe"
@@ -62,7 +62,7 @@ mod tests {
 
         mock_repository
             .expect_save()
-            .times(1)
+            .once()
             .withf(move |customer| {
                 customer.id() == CustomerId::from_uuid(customer_id)
                     && customer.first_name() == "John"
@@ -73,7 +73,7 @@ mod tests {
 
         mock_message_publisher
             .expect_publish_updated()
-            .times(1)
+            .once()
             .withf(move |event| {
                 event.customer().id() == CustomerId::from_uuid(customer_id)
                     && event.customer().first_name() == "John"

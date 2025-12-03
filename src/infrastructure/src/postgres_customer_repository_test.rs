@@ -26,11 +26,10 @@ mod tests {
         let url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", port);
 
         let db_pool = config::configure(url).await?;
-        let repository = PostgresCustomerRepository::new(&db_pool);
 
         Ok(TestContext {
             _container: container,
-            repository,
+            repository: PostgresCustomerRepository::new(&db_pool),
             pool: db_pool,
         })
     }
@@ -59,10 +58,10 @@ mod tests {
             })?
             .into();
 
-        assert_eq!(saved_customer.id(), customer_id);
-        assert_eq!(saved_customer.user_name(), "user name");
-        assert_eq!(saved_customer.first_name(), "first name");
-        assert_eq!(saved_customer.last_name(), "last name");
+        assert_eq!(customer_id, saved_customer.id());
+        assert_eq!("user name", saved_customer.user_name());
+        assert_eq!("first name", saved_customer.first_name());
+        assert_eq!("last name", saved_customer.last_name());
 
         Ok(())
     }
