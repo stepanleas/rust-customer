@@ -31,7 +31,7 @@ pub async fn create(
         .extensions()
         .get::<String>()
         .cloned()
-        .unwrap_or_else(|| "unknown".to_string());
+        .unwrap_or("unknown".to_string());
 
     tracing::info!(%correlation_id, "Handling customer create");
 
@@ -79,7 +79,7 @@ pub async fn update(
         .extensions()
         .get::<String>()
         .cloned()
-        .unwrap_or_else(|| "unknown".to_string());
+        .unwrap_or("unknown".to_string());
 
     tracing::info!(%correlation_id, "Handling customer update");
 

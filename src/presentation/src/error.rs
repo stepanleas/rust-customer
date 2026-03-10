@@ -113,7 +113,7 @@ impl From<ValidationErrors> for ApiError {
                 let message = validation_error
                     .message
                     .clone()
-                    .unwrap_or_else(|| "Invalid value".into())
+                    .unwrap_or("Invalid value".into())
                     .to_string();
 
                 result.push(ValidationFieldError {

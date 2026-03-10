@@ -1,9 +1,10 @@
 use crate::commands::{CreateCustomerCommand, UpdateCustomerCommand};
 use crate::dtos::CustomerDto;
-use crate::mappers::CustomerMapper;
 use crate::ports::output::publishers::CustomerMessagePublisher;
 use crate::repositories::CustomerRepository;
+use domain::entities::Customer;
 use domain::events::{CustomerCreatedEvent, CustomerUpdatedEvent};
+use shared::domain::value_objects::CustomerId;
 use std::sync::Arc;
 
 pub struct CreateCustomerCommandHandler {
@@ -22,19 +23,25 @@ impl CreateCustomerCommandHandler {
         }
     }
 
+    // TODO: Add transactional outbox
     pub async fn execute(&self, command: CreateCustomerCommand) -> anyhow::Result<CustomerDto> {
-        let customer = self
-            .repository
-            .save(CustomerMapper::map_create_customer_command_to_domain_entity(command))?;
+        let customer = Customer::builder()
+            .id(CustomerId::new())
+            .user_name(command.user_name().into())
+            .first_name(command.first_name().into())
+            .last_name(command.last_name().into())
+            .build();
+
+        let saved_customer = self.repository.save(customer)?;
         tracing::info!(
             "Customer with id: {} created",
-            customer.id().as_uuid().to_string()
+            saved_customer.id().as_uuid().to_string(),
         );
 
         self.message_publisher
-            .publish_created(CustomerCreatedEvent::new(customer.clone()))?;
+            .publish_created(CustomerCreatedEvent::new(saved_customer.clone()))?;
 
-        Ok(CustomerDto::from(customer))
+        Ok(CustomerDto::from(saved_customer))
     }
 }
 
@@ -54,18 +61,24 @@ impl UpdateCustomerCommandHandler {
         }
     }
 
+    // TODO: Add transactional outbox
     pub async fn execute(&self, command: UpdateCustomerCommand) -> anyhow::Result<CustomerDto> {
-        let customer = self
-            .repository
-            .save(CustomerMapper::map_update_customer_command_to_domain_entity(command))?;
+        let customer = Customer::builder()
+            .id(CustomerId::from_uuid(command.id()))
+            .user_name(command.user_name().into())
+            .first_name(command.first_name().into())
+            .last_name(command.last_name().into())
+            .build();
+
+        let saved_customer = self.repository.save(customer)?;
         tracing::info!(
             "Customer with id: {} updated",
-            customer.id().as_uuid().to_string()
+            saved_customer.id().as_uuid().to_string()
         );
 
         self.message_publisher
-            .publish_updated(CustomerUpdatedEvent::new(customer.clone()))?;
+            .publish_updated(CustomerUpdatedEvent::new(saved_customer.clone()))?;
 
-        Ok(CustomerDto::from(customer))
+        Ok(CustomerDto::from(saved_customer))
     }
 }
